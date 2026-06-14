@@ -1,76 +1,75 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Nupcial — Resultados del tiempo</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f2f2f7; color: #1c1c1e;
-      min-height: 100vh; padding: 24px 16px 48px;
-    }
-    .container { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-
-    .card { background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f2f2f7;color:#1c1c1e;min-height:100vh;padding:20px 14px 48px}
+    .container{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+    .card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
 
     /* Header */
-    .header { text-align: center; padding: 20px 16px; }
-    .header .city { font-size: 22px; font-weight: 700; }
-    .header .date { font-size: 14px; color: #8e8e93; margin-top: 2px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 6px 18px; border-radius: 20px; font-size: 15px; font-weight: 600; }
-    .badge-excellent  { background:#d4f4de; color:#1a7a35; }
-    .badge-acceptable { background:#ffecd1; color:#a05c00; }
-    .badge-tooHot     { background:#ffecd1; color:#a05c00; }
-    .badge-tooCold    { background:#dce8ff; color:#0055c4; }
-    .badge-risky      { background:#ffdad8; color:#c0392b; }
-    .description { font-size: 13px; color: #636366; text-align: center; margin-top: 10px; line-height: 1.4; }
+    .header{text-align:center;padding:18px 12px}
+    .city{font-size:21px;font-weight:700}
+    .date{font-size:13px;color:#8e8e93;margin-top:2px}
+    .badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 18px;border-radius:20px;font-size:14px;font-weight:600}
+    .badge-excellent{background:#d4f4de;color:#1a7a35}
+    .badge-acceptable{background:#ffecd1;color:#a05c00}
+    .badge-tooHot{background:#ffecd1;color:#a05c00}
+    .badge-tooCold{background:#dce8ff;color:#0055c4}
+    .badge-risky{background:#ffdad8;color:#c0392b}
+    .description{font-size:12px;color:#636366;text-align:center;margin-top:8px;line-height:1.45}
 
-    /* KPI grid */
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #e5e5ea; border-radius: 12px; overflow: hidden; }
-    .kpi { background:#fff; padding:12px 14px; display:flex; flex-direction:column; gap:2px; }
-    .kpi-label { font-size:10px; font-weight:500; color:#8e8e93; text-transform:uppercase; letter-spacing:.4px; }
-    .kpi-value { font-size:20px; font-weight:700; display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; }
-    .kpi-unit  { font-size:12px; font-weight:400; color:#636366; }
-    .kpi-fc    { font-size:12px; font-weight:600; color:#5856d6; margin-left:2px; }
-    .kpi-fc-label { font-size:9px; color:#5856d6; opacity:.7; }
-    .kpi-sub   { font-size:10px; color:#aeaeb2; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5ea;border-radius:12px;overflow:hidden}
+    .kpi{background:#fff;padding:11px 13px;display:flex;flex-direction:column;gap:2px}
+    .kpi-label{font-size:10px;font-weight:500;color:#8e8e93;text-transform:uppercase;letter-spacing:.4px}
+    .kpi-value{font-size:19px;font-weight:700;display:flex;align-items:baseline;gap:3px;flex-wrap:wrap}
+    .kpi-unit{font-size:11px;color:#636366}
+    .kpi-fc{font-size:11px;font-weight:600;color:#5856d6;margin-left:3px}
+    .kpi-fc-label{font-size:9px;color:#5856d6;opacity:.7}
+    .kpi-sub{font-size:10px;color:#aeaeb2;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    /* Section title */
-    .section-title { font-size:11px; font-weight:500; color:#8e8e93; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+    /* Section */
+    .section-title{font-size:11px;font-weight:500;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 
-    /* Wind bars */
-    .wind-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:11px; }
-    .wind-bar-label { width:38px; text-align:right; color:#aeaeb2; font-variant-numeric:tabular-nums; flex-shrink:0; }
-    .wind-bar-track { flex:1; height:14px; background:#f2f2f7; border-radius:3px; position:relative; overflow:hidden; }
-    .wind-bar-fill  { height:100%; border-radius:3px; display:flex; align-items:center; padding-left:6px; min-width:2px; }
-    .wind-bar-fill span { font-size:10px; font-weight:600; color:#fff; white-space:nowrap; }
-    .wind-bar-tag { font-size:10px; font-weight:600; flex-shrink:0; width:68px; }
-
-    /* Forecast pill */
-    .forecast-pill { background:#f0effe; border-radius:10px; padding:10px 14px; font-size:12px; color:#5856d6; line-height:1.5; }
-    .forecast-pill strong { font-weight:600; }
+    /* Horizontal bar rows (temp + wind) */
+    .hbar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:11px}
+    .hbar-label{width:36px;text-align:right;color:#aeaeb2;font-variant-numeric:tabular-nums;flex-shrink:0;font-size:10px}
+    .hbar-track{flex:1;height:14px;background:#f2f2f7;border-radius:3px;position:relative;overflow:hidden}
+    .hbar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:5px;min-width:2px}
+    .hbar-fill span{font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+    .hbar-tag{font-size:10px;font-weight:600;flex-shrink:0;width:60px}
 
     /* Legend */
-    .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    .legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:#636366; }
-    .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-    .legend-dash { width:14px; height:2px; flex-shrink:0; border-radius:1px; }
+    .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#636366}
+    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .legend-line{width:14px;height:2px;flex-shrink:0;border-radius:1px}
+    .legend-dashed{width:14px;height:2px;border-top:2px dashed currentColor;flex-shrink:0}
 
-    /* Chart containers */
-    .chart-wrap { position:relative; width:100%; }
+    /* Forecast pill */
+    .fc-pill{background:#f0effe;border-radius:10px;padding:10px 13px;font-size:12px;color:#5856d6;line-height:1.5}
+    .fc-pill strong{font-weight:600}
 
-    /* Loading / error */
-    .loading { text-align:center; padding:60px 20px; color:#8e8e93; }
-    .loading .spinner { width:32px; height:32px; border:3px solid #e5e5ea; border-top-color:#5856d6; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .error { text-align:center; padding:40px 20px; color:#c0392b; }
+    /* Axis ticks row */
+    .axis-ticks{display:flex;justify-content:space-between;padding:0 0 0 43px;margin-top:3px}
+    .axis-tick{font-size:9px;color:#aeaeb2;text-align:center}
 
-    /* Footer */
-    .footer { text-align:center; font-size:12px; color:#aeaeb2; margin-top:4px; }
-    .footer a { color:#5856d6; text-decoration:none; }
+    /* Chart */
+    .chart-wrap{position:relative;width:100%}
+
+    /* Loading */
+    .loading{text-align:center;padding:60px 20px;color:#8e8e93}
+    .spinner{width:30px;height:30px;border:3px solid #e5e5ea;border-top-color:#5856d6;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error{text-align:center;padding:40px 20px;color:#c0392b}
+
+    .footer{text-align:center;font-size:11px;color:#aeaeb2;margin-top:4px}
+    .footer a{color:#5856d6;text-decoration:none}
   </style>
 </head>
 <body>
@@ -79,329 +78,395 @@
 </div>
 
 <script>
-const MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-function pad(n) { return String(n).padStart(2,'0'); }
-
-function dateStr(year, month, day) {
-  if (month === 2 && day === 29) {
-    const leap = (year%4===0&&year%100!==0)||year%400===0;
-    if (!leap) return null;
-  }
-  return `${year}-${pad(month)}-${pad(day)}`;
+const MONTHS_ES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function pad(n){return String(n).padStart(2,'0')}
+function dateStr(y,m,d){
+  if(m===2&&d===29){const l=(y%4===0&&y%100!==0)||y%400===0;if(!l)return null}
+  return`${y}-${pad(m)}-${pad(d)}`
 }
+function avg(a){return a.length?a.reduce((s,v)=>s+v,0)/a.length:null}
 
-function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
-
-function windColor(kn) { return kn>20?'#ff3b30':kn>10?'#ff9500':'#34c759'; }
-function windLabel(kn) { return kn>20?'Too windy':kn>10?'Moderate':'Calm'; }
-function rainColor(mm) { return mm>10?'#ff3b30':mm>2?'#007aff':'#34c759'; }
-
-function apparentTemp(t, rh) {
-  const e = (rh/100)*6.105*Math.exp(17.27*t/(237.7+t));
-  return t+0.33*e-4.0;
+function windColor(k){return k>20?'#ff3b30':k>10?'#ff9500':'#34c759'}
+function windLabel(k){return k>20?'Too windy':k>10?'Moderate':'Calm'}
+function rainColor(mm){return mm>10?'#ff3b30':mm>2?'#007aff':'#34c759'}
+function tempBarColor(t){
+  if(t>=32)return'#ff3b30';
+  if(t>=28)return'#ff9500';
+  if(t<=18)return'#5ac8fa';
+  return'#007aff'
 }
-
-function computeRating(avgMax, avgMin, rainyDays, total) {
-  const ratio = rainyDays/Math.max(total,1);
-  const ideal = avgMax>=18&&avgMax<=30&&(avgMin==null||(avgMin>=10&&avgMin<=22));
-  if (ratio<=0.15&&ideal) return 'excellent';
-  if (ratio<=0.3&&avgMax<=33&&avgMax>=14) return 'acceptable';
-  if (avgMax>33) return 'tooHot';
-  if (avgMax<14) return 'tooCold';
-  return 'risky';
+function tempBarLabel(t){
+  if(t>=32)return'Very hot';
+  if(t>=28)return'Hot';
+  if(t<=18)return'Cool';
+  return''
 }
-
-const RATING_LABEL = { excellent:'☀️ Excelente', acceptable:'⛅ Aceptable', tooHot:'🥵 Demasiado calor', tooCold:'🧥 Bastante frío', risky:'🌧️ Fecha arriesgada' };
-
-// ── API ─────────────────────────────────────────────────────────────────────
-
-async function fetchYear(lat, lon, year, month, day) {
-  const d = dateStr(year, month, day);
-  if (!d) return null;
-  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_mean&wind_speed_unit=kn&timezone=auto`;
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const j = await r.json();
-    const dd = j.daily;
-    if (!dd?.time?.length) return null;
-    return { year, tMax:dd.temperature_2m_max?.[0]??null, tMin:dd.temperature_2m_min?.[0]??null,
-             rain:dd.precipitation_sum?.[0]??0, wind:dd.wind_speed_10m_max?.[0]??null,
-             gusts:dd.wind_gusts_10m_max?.[0]??null, humidity:dd.relative_humidity_2m_mean?.[0]??null };
-  } catch { return null; }
+function apparentTemp(t,rh){const e=(rh/100)*6.105*Math.exp(17.27*t/(237.7+t));return t+0.33*e-4.0}
+function computeRating(aMax,aMin,rainy,total){
+  const r=rainy/Math.max(total,1);
+  const ideal=aMax>=18&&aMax<=30&&(aMin==null||(aMin>=10&&aMin<=22));
+  if(r<=0.15&&ideal)return'excellent';
+  if(r<=0.3&&aMax<=33&&aMax>=14)return'acceptable';
+  if(aMax>33)return'tooHot';
+  if(aMax<14)return'tooCold';
+  return'risky'
 }
+const RATING_LABEL={excellent:'☀️ Excelente',acceptable:'⛅ Aceptable',tooHot:'🥵 Demasiado calor',tooCold:'🧥 Bastante frío',risky:'🌧️ Fecha arriesgada'};
 
-async function fetchForecast(lat, lon, month, day) {
-  const today = new Date();
-  const year = today.getFullYear();
-  let target = new Date(year, month-1, day);
-  if (target < today) target = new Date(year+1, month-1, day);
-  const diff = Math.round((target-today)/86400000);
-  if (diff>15||diff<0) return null;
-  const d = `${target.getFullYear()}-${pad(month)}-${pad(day)}`;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max,wind_gusts_10m_max&wind_speed_unit=kn&timezone=auto`;
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const j = await r.json();
-    const dd = j.daily;
-    if (!dd) return null;
-    return { tMax:dd.temperature_2m_max?.[0]??null, tMin:dd.temperature_2m_min?.[0]??null,
-             rain:dd.precipitation_sum?.[0]??null, rainProb:dd.precipitation_probability_max?.[0]??null,
-             wind:dd.wind_speed_10m_max?.[0]??null, gusts:dd.wind_gusts_10m_max?.[0]??null,
-             humidity:dd.relative_humidity_2m_mean?.[0]??null, daysOut:diff };
-  } catch { return null; }
-}
+// ── API ───────────────────────────────────────────────────────────────────
 
-// ── Chart helpers ────────────────────────────────────────────────────────────
-
-function makeHorizontalBarChart(canvasId, labels, datasets, xLabel) {
-  new Chart(document.getElementById(canvasId), {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: ctx => ` ${ctx.parsed.x?.toFixed(1)} ${xLabel}`
-      }}},
-      scales: {
-        x: { grid: { color:'rgba(0,0,0,.06)' }, ticks: { font:{size:10}, color:'#8e8e93',
-          callback: v => `${v} ${xLabel}` } },
-        y: { grid: { display:false }, ticks: { font:{size:11}, color:'#636366' } }
-      }
+async function fetchYear(lat,lon,year,month,day){
+  const d=dateStr(year,month,day);if(!d)return null;
+  const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_mean&hourly=temperature_2m&wind_speed_unit=kn&timezone=auto`;
+  try{
+    const r=await fetch(url);if(!r.ok)return null;
+    const j=await r.json();
+    const dd=j.daily;if(!dd?.time?.length)return null;
+    // parse hourly temps into {hour: temp}
+    const hourlyTemps={};
+    if(j.hourly?.time&&j.hourly?.temperature_2m){
+      j.hourly.time.forEach((t,i)=>{
+        const h=parseInt(t.split('T')[1]?.slice(0,2)??'99');
+        const v=j.hourly.temperature_2m[i];
+        if(h<24&&v!=null)hourlyTemps[h]=v;
+      });
     }
-  });
+    return{year,tMax:dd.temperature_2m_max?.[0]??null,tMin:dd.temperature_2m_min?.[0]??null,
+      rain:dd.precipitation_sum?.[0]??0,wind:dd.wind_speed_10m_max?.[0]??null,
+      gusts:dd.wind_gusts_10m_max?.[0]??null,humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps};
+  }catch{return null}
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
-
-function fcSpan(val, unit='') {
-  if (val==null) return '';
-  const fmt = typeof val==='number' ? (Number.isInteger(val)?val:val.toFixed(1)) : val;
-  return `<span class="kpi-fc-label">Fc</span><span class="kpi-fc">${fmt}${unit}</span>`;
+async function fetchForecast(lat,lon,month,day){
+  const today=new Date();
+  const yr=today.getFullYear();
+  let target=new Date(yr,month-1,day);
+  if(target<today)target=new Date(yr+1,month-1,day);
+  const diff=Math.round((target-today)/86400000);
+  if(diff>15||diff<0)return null;
+  const d=`${target.getFullYear()}-${pad(month)}-${pad(day)}`;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max,wind_gusts_10m_max&hourly=temperature_2m&wind_speed_unit=kn&timezone=auto`;
+  try{
+    const r=await fetch(url);if(!r.ok)return null;
+    const j=await r.json();const dd=j.daily;if(!dd)return null;
+    const hourlyTemps={};
+    if(j.hourly?.time&&j.hourly?.temperature_2m){
+      j.hourly.time.forEach((t,i)=>{
+        const h=parseInt(t.split('T')[1]?.slice(0,2)??'99');
+        const v=j.hourly.temperature_2m[i];
+        if(h<24&&v!=null)hourlyTemps[h]=v;
+      });
+    }
+    return{tMax:dd.temperature_2m_max?.[0]??null,tMin:dd.temperature_2m_min?.[0]??null,
+      rain:dd.precipitation_sum?.[0]??null,rainProb:dd.precipitation_probability_max?.[0]??null,
+      wind:dd.wind_speed_10m_max?.[0]??null,gusts:dd.wind_gusts_10m_max?.[0]??null,
+      humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps,daysOut:diff};
+  }catch{return null}
 }
 
-function kpiCell(label, value, unit, sub, fcVal, fcUnit='') {
-  return `<div class="kpi">
+// ── Builders ──────────────────────────────────────────────────────────────
+
+function fcSpan(val,unit=''){
+  if(val==null)return'';
+  const f=typeof val==='number'?(Number.isInteger(val)?val:val.toFixed(1)):val;
+  return`<span class="kpi-fc-label">Fc</span><span class="kpi-fc">${f}${unit}</span>`
+}
+function kpiCell(label,value,unit,sub,fcVal,fcUnit=''){
+  return`<div class="kpi">
     <div class="kpi-label">${label}</div>
     <div class="kpi-value"><span>${value}</span><span class="kpi-unit">${unit}</span>${fcVal!=null?fcSpan(fcVal,fcUnit):''}</div>
     ${sub?`<div class="kpi-sub">${sub}</div>`:''}
-  </div>`;
+  </div>`
 }
 
-function render(entries, fc, city, month, day) {
-  const valid = entries.filter(e=>e&&e.tMax!=null);
-  if (!valid.length) {
-    document.getElementById('app').innerHTML = `<div class="error">No se encontraron datos para esta fecha y ubicación.</div>`;
-    return;
+function buildHourlyBars(avgTemps,fcTemps){
+  const hours=Array.from({length:24},(_,i)=>i);
+  const validAvg=hours.map(h=>avgTemps[h]).filter(v=>v!=null);
+  if(!validAvg.length)return'';
+  const minT=Math.min(...validAvg);
+  const maxT=Math.max(...validAvg);
+  const rows=hours.map(h=>{
+    const t=avgTemps[h];if(t==null)return'';
+    const norm=(maxT>minT)?(t-minT)/(maxT-minT)*0.88+0.05:0.5;
+    const color=tempBarColor(t);
+    const label=tempBarLabel(t);
+    const fcW=fcTemps&&fcTemps[h]!=null?(maxT>minT?(fcTemps[h]-minT)/(maxT-minT)*0.88+0.05:0.5):null;
+    const fcLine=fcW!=null?`<div style="position:absolute;left:${(fcW*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#5856d6;opacity:.85"></div>`:'';
+    return`<div class="hbar-row">
+      <div class="hbar-label">${pad(h)}h</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:${color}"><span>${t.toFixed(1)}°C</span></div>
+        ${fcLine}
+      </div>
+      <div class="hbar-tag" style="color:${color}">${label}</div>
+    </div>`
+  }).join('');
+  return rows;
+}
+
+function buildWindBars(valid,fc){
+  const wValid=valid.filter(e=>e.wind!=null);
+  if(!wValid.length)return'';
+  const allW=[...wValid.map(e=>e.wind),fc?.wind??0];
+  const minW=Math.min(...wValid.map(e=>e.wind));
+  const maxW=Math.max(...allW,1);
+  const rows=wValid.map(e=>{
+    const norm=(e.wind-minW)/(maxW-minW)*0.85+0.05;
+    const color=windColor(e.wind);
+    const gStr=e.gusts&&e.gusts>e.wind+3?` ↑${Math.round(e.gusts)}kn`:'';
+    return`<div class="hbar-row">
+      <div class="hbar-label">${e.year}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:${color}"><span>${Math.round(e.wind)} kn${gStr}</span></div></div>
+      <div class="hbar-tag" style="color:${color}">${windLabel(e.wind)}</div>
+    </div>`
+  }).join('');
+  const fcRow=fc?.wind!=null?(()=>{
+    const norm=(fc.wind-minW)/(maxW-minW)*0.85+0.05;
+    const gStr=fc.gusts&&fc.gusts>fc.wind+3?` ↑${Math.round(fc.gusts)}kn`:'';
+    return`<div class="hbar-row">
+      <div class="hbar-label" style="color:#5856d6">Prev.</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:#5856d6"><span>${Math.round(fc.wind)} kn${gStr}</span></div></div>
+      <div class="hbar-tag" style="color:#5856d6">Forecast</div>
+    </div>`
+  })():'';
+  return rows+fcRow;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+
+function render(entries,fc,city,month,day){
+  const valid=entries.filter(e=>e&&e.tMax!=null);
+  if(!valid.length){
+    document.getElementById('app').innerHTML=`<div class="error">No se encontraron datos para esta fecha y ubicación.</div>`;return;
   }
 
-  const tMaxArr  = valid.map(e=>e.tMax);
-  const tMinArr  = valid.map(e=>e.tMin).filter(v=>v!=null);
-  const rainArr  = valid.map(e=>e.rain??0);
-  const windArr  = valid.map(e=>e.wind).filter(v=>v!=null);
-  const humArr   = valid.map(e=>e.humidity).filter(v=>v!=null);
-  const gustArr  = valid.map(e=>e.gusts).filter(v=>v!=null);
+  const tMaxArr =valid.map(e=>e.tMax);
+  const tMinArr =valid.map(e=>e.tMin).filter(v=>v!=null);
+  const rainArr =valid.map(e=>e.rain??0);
+  const windArr =valid.map(e=>e.wind).filter(v=>v!=null);
+  const humArr  =valid.map(e=>e.humidity).filter(v=>v!=null);
+  const gustArr =valid.map(e=>e.gusts).filter(v=>v!=null);
 
-  const avgMax  = avg(tMaxArr);
-  const avgMin  = avg(tMinArr);
-  const avgRain = avg(rainArr);
-  const avgWind = avg(windArr);
-  const avgHum  = avg(humArr);
-  const maxGust = gustArr.length ? Math.max(...gustArr) : null;
-  const rainyDays = rainArr.filter(r=>r>1).length;
-  const calmYears = windArr.filter(w=>w<=15).length;
-  const total = valid.length;
+  const avgMax =avg(tMaxArr);
+  const avgMin =avg(tMinArr);
+  const avgRain=avg(rainArr);
+  const avgWind=avg(windArr);
+  const avgHum =avg(humArr);
+  const maxGust=gustArr.length?Math.max(...gustArr):null;
+  const rainyDays=rainArr.filter(r=>r>1).length;
+  const calmYears=windArr.filter(w=>w<=15).length;
+  const total=valid.length;
 
-  const rate = computeRating(avgMax, avgMin, rainyDays, total);
-  const hi   = avgMax!=null&&avgHum!=null ? apparentTemp(avgMax,avgHum) : null;
-  const fcHI = fc&&fc.tMax!=null&&fc.humidity!=null ? apparentTemp(fc.tMax,fc.humidity) : null;
+  const rate=computeRating(avgMax,avgMin,rainyDays,total);
+  const hi  =avgMax!=null&&avgHum!=null?apparentTemp(avgMax,avgHum):null;
+  const fcHI=fc?.tMax!=null&&fc?.humidity!=null?apparentTemp(fc.tMax,fc.humidity):null;
 
-  // Description
-  const descs = { excellent:`Históricamente seco con buenas temperaturas. Lluvia en solo ${rainyDays} de ${total} años analizados.`,
+  // Avg hourly temps
+  const avgHourly={};
+  for(let h=0;h<24;h++){
+    const vals=valid.filter(e=>e.hourlyTemps?.[h]!=null).map(e=>e.hourlyTemps[h]);
+    if(vals.length)avgHourly[h]=avg(vals);
+  }
+  const fcHourly=fc?.hourlyTemps??{};
+
+  const descs={
+    excellent:`Históricamente seco con buenas temperaturas. Lluvia en solo ${rainyDays} de ${total} años analizados.`,
     acceptable:`Condiciones razonables. Lluvia en ${rainyDays}/${total} años.`,
     tooHot:`Temperatura media alta (${avgMax?.toFixed(1)}°C) — puede afectar la comodidad.`,
     tooCold:`Temperatura media baja (${avgMax?.toFixed(1)}°C máx).`,
-    risky:`Condiciones variables. Revisar previsión.` };
+    risky:`Condiciones variables. Revisar previsión.`
+  };
 
   // Forecast pill
-  let fcPill = '';
-  if (fc) {
-    const parts = [];
-    if (fc.tMax!=null&&avgMax!=null) { const d=(fc.tMax-avgMax).toFixed(1); parts.push(`máx ${d>=0?'+':''}${d}°C`); }
-    if (fc.tMin!=null&&avgMin!=null) { const d=(fc.tMin-avgMin).toFixed(1); parts.push(`mín ${d>=0?'+':''}${d}°C`); }
-    if (fc.rain!=null&&avgRain!=null){ const d=(fc.rain-avgRain).toFixed(1); parts.push(`lluvia ${d>=0?'+':''}${d} mm`); }
-    fcPill = `<div class="forecast-pill"><strong>Previsión vs histórico</strong> (en ${fc.daysOut} día${fc.daysOut!==1?'s':''}): ${parts.join(' · ')}.${fc.rainProb!=null?' Prob. lluvia: '+fc.rainProb+'%.':''}</div>`;
+  let fcPill='';
+  if(fc){
+    const p=[];
+    if(fc.tMax!=null&&avgMax!=null){const d=(fc.tMax-avgMax).toFixed(1);p.push(`máx ${d>=0?'+':''}${d}°C`)}
+    if(fc.tMin!=null&&avgMin!=null){const d=(fc.tMin-avgMin).toFixed(1);p.push(`mín ${d>=0?'+':''}${d}°C`)}
+    if(fc.rain!=null&&avgRain!=null){const d=(fc.rain-avgRain).toFixed(1);p.push(`lluvia ${d>=0?'+':''}${d} mm`)}
+    fcPill=`<div class="fc-pill"><strong>Previsión vs histórico</strong> (en ${fc.daysOut} día${fc.daysOut!==1?'s':''}): ${p.join(' · ')}.${fc.rainProb!=null?' Prob. lluvia: '+fc.rainProb+'%.':''}</div>`;
   }
 
   // KPI grid
-  const kpiGrid = `<div class="kpi-grid" style="padding:0">
-    ${kpiCell('Temp. máx', avgMax?.toFixed(1)??'—','°C', `${Math.min(...tMaxArr).toFixed(1)}–${Math.max(...tMaxArr).toFixed(1)} °C`, fc?.tMax?.toFixed(1),'°')}
-    ${kpiCell('Lluvia', avgRain?.toFixed(1)??'—','mm', `${rainyDays}/${total} años con lluvia`, fc?.rain?.toFixed(1),' mm')}
-    ${kpiCell('Temp. mín', avgMin?.toFixed(1)??'—','°C', tMinArr.length?`${Math.min(...tMinArr).toFixed(1)}–${Math.max(...tMinArr).toFixed(1)} °C`:'', fc?.tMin?.toFixed(1),'°')}
-    ${kpiCell('Humedad', avgHum!=null?Math.round(avgHum):'—','%', humArr.length?`${Math.round(Math.min(...humArr))}–${Math.round(Math.max(...humArr))} %`:'', fc?.humidity!=null?Math.round(fc.humidity):null,'%')}
+  const kpiGrid=`<div class="kpi-grid">
+    ${kpiCell('Temp. máx',avgMax?.toFixed(1)??'—','°C',`${Math.min(...tMaxArr).toFixed(1)}–${Math.max(...tMaxArr).toFixed(1)} °C`,fc?.tMax?.toFixed(1),'°')}
+    ${kpiCell('Lluvia',avgRain?.toFixed(1)??'—','mm',`${rainyDays}/${total} años con lluvia`,fc?.rain?.toFixed(1),' mm')}
+    ${kpiCell('Temp. mín',avgMin?.toFixed(1)??'—','°C',tMinArr.length?`${Math.min(...tMinArr).toFixed(1)}–${Math.max(...tMinArr).toFixed(1)} °C`:'',fc?.tMin?.toFixed(1),'°')}
+    ${kpiCell('Humedad',avgHum!=null?Math.round(avgHum):'—','%',humArr.length?`${Math.round(Math.min(...humArr))}–${Math.round(Math.max(...humArr))} %`:'',fc?.humidity!=null?Math.round(fc.humidity):null,'%')}
     ${hi!=null?kpiCell('Sensación térmica',Math.round(hi),'°C','Índice de calor',fcHI!=null?Math.round(fcHI):null,'°'):''}
     ${avgWind!=null?kpiCell('Viento medio',Math.round(avgWind),'kn',`Calma: ${calmYears}/${windArr.length}${maxGust?' · ráf. '+Math.round(maxGust)+'kn':''}`,fc?.wind!=null?Math.round(fc.wind):null,' kn'):''}
   </div>`;
 
-  // Annual temperature chart data
-  const tempLabels = valid.map(e=>String(e.year));
-  if (fc?.tMax!=null) tempLabels.push('Prev.');
-  const tMaxData  = valid.map(e=>e.tMax);
-  const tMinData  = valid.map(e=>e.tMin??null);
-  if (fc?.tMax!=null) { tMaxData.push(fc.tMax); tMinData.push(fc.tMin??null); }
+  // Hours for evolution chart
+  const hours=Array.from({length:24},(_,i)=>i);
+  const avgHourlyData=hours.map(h=>avgHourly[h]??null);
+  const fcHourlyData =hours.map(h=>fcHourly[h]??null);
+  const hasFcHourly  =fcHourlyData.some(v=>v!=null);
 
-  // Annual rainfall chart data
-  const rainLabels = [...valid.map(e=>String(e.year))];
-  const rainData   = [...valid.map(e=>e.rain??0)];
-  const rainColors = rainData.map(r=>rainColor(r));
-  if (fc?.rain!=null) { rainLabels.push('Prev.'); rainData.push(fc.rain); rainColors.push('#5856d6'); }
+  // Annual temp chart data (floating bars)
+  const yearLabels=[...valid.map(e=>String(e.year))];
+  const floatData =valid.map(e=>[e.tMin??e.tMax,e.tMax]);
+  const ptMin     =valid.map(e=>e.tMin);
+  const ptMax     =valid.map(e=>e.tMax);
+  const bgFloat   =valid.map(()=>'rgba(200,200,205,.5)');
+  if(fc?.tMax!=null){yearLabels.push('Prev.');floatData.push([fc.tMin??fc.tMax,fc.tMax]);ptMin.push(fc.tMin);ptMax.push(fc.tMax);bgFloat.push('rgba(88,86,214,.25)')}
+
+  // Annual rain data
+  const rainLabels=[...valid.map(e=>String(e.year))];
+  const rainData  =[...valid.map(e=>e.rain??0)];
+  const rainBg    =rainData.map(r=>rainColor(r));
+  if(fc?.rain!=null){rainLabels.push('Prev.');rainData.push(fc.rain);rainBg.push('#5856d6')}
+  const hasRain=rainData.some(r=>r>0);
 
   // Wind bars HTML
-  const wValid = valid.filter(e=>e.wind!=null);
-  const allWinds = [...wValid.map(e=>e.wind), fc?.wind??0];
-  const minW = Math.min(...wValid.map(e=>e.wind));
-  const maxW = Math.max(...allWinds, 1);
-  const windBarsHTML = wValid.map(e=>{
-    const norm = (e.wind-minW)/(maxW-minW)*0.85+0.05;
-    const color = windColor(e.wind);
-    const gustStr = e.gusts&&e.gusts>e.wind+3?` ↑${Math.round(e.gusts)}kn`:'';
-    return `<div class="wind-bar-row">
-      <div class="wind-bar-label">${e.year}</div>
-      <div class="wind-bar-track"><div class="wind-bar-fill" style="width:${(norm*100).toFixed(1)}%;background:${color}"><span>${Math.round(e.wind)} kn${gustStr}</span></div></div>
-      <div class="wind-bar-tag" style="color:${color}">${windLabel(e.wind)}</div>
-    </div>`;
-  }).join('');
-  const fcWindHTML = fc?.wind!=null ? (() => {
-    const norm = (fc.wind-minW)/(maxW-minW)*0.85+0.05;
-    const gustStr = fc.gusts&&fc.gusts>fc.wind+3?` ↑${Math.round(fc.gusts)}kn`:'';
-    return `<div class="wind-bar-row">
-      <div class="wind-bar-label" style="color:#5856d6">Prev.</div>
-      <div class="wind-bar-track"><div class="wind-bar-fill" style="width:${(norm*100).toFixed(1)}%;background:#5856d6"><span>${Math.round(fc.wind)} kn${gustStr}</span></div></div>
-      <div class="wind-bar-tag" style="color:#5856d6">Forecast</div>
-    </div>`;
-  })() : '';
+  const windBarsHTML=buildWindBars(valid,fc);
+  const hourlyBarsHTML=buildHourlyBars(avgHourly,hasFcHourly?fcHourly:null);
 
-  const dateLabel = `${day} de ${MONTHS_ES[month-1]}`;
-  const hasRain = rainData.some(r=>r>0);
-
-  document.getElementById('app').innerHTML = `
+  document.getElementById('app').innerHTML=`
     <div class="card header">
       <div class="city">${city}</div>
-      <div class="date">${dateLabel} · ${total} años analizados</div>
+      <div class="date">${day} de ${MONTHS_ES[month-1]} · ${total} años analizados</div>
       <div class="badge badge-${rate}">${RATING_LABEL[rate]}</div>
       <div class="description">${descs[rate]}</div>
     </div>
 
     <div class="card" style="padding:0">${kpiGrid}</div>
 
-    ${fc ? fcPill : ''}
+    ${fc?fcPill:''}
 
+    <!-- Evolución temperatura -->
     <div class="card">
-      <div class="section-title">Temperatura máx. y mín. por año</div>
-      <div class="chart-wrap" style="height:${Math.max(160, tempLabels.length*28)}px">
-        <canvas id="chartTemp"></canvas>
-      </div>
-      <div class="legend" style="margin-top:8px">
-        <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> Temp. mín.</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> Temp. máx.</div>
-        ${fc?.tMax!=null?'<div class="legend-item"><div class="legend-dash" style="background:#5856d6"></div> Previsión</div>':''}
+      <div class="section-title">Evolución temperatura horaria (media)</div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chartEvol"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#007aff"></div> Media histórica</div>
+        ${hasFcHourly?'<div class="legend-item"><div class="legend-dashed" style="color:#5856d6"></div> Previsión</div>':''}
       </div>
     </div>
 
-    ${hasRain ? `<div class="card">
-      <div class="section-title">Lluvia por año (mm)</div>
-      <div class="chart-wrap" style="height:${Math.max(120, rainLabels.length*26)}px">
-        <canvas id="chartRain"></canvas>
+    <!-- Desglose horario temp -->
+    ${hourlyBarsHTML?`<div class="card">
+      <div class="section-title">Temperatura por hora (media histórica)</div>
+      ${hourlyBarsHTML}
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> Ideal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> Caluroso</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> Muy caluroso</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5ac8fa"></div> Fresco</div>
+        ${hasFcHourly?'<div class="legend-item"><div class="legend-line" style="background:#5856d6;width:10px;height:2px;flex-shrink:0"></div> Previsión</div>':''}
       </div>
-      <div class="legend" style="margin-top:8px">
+    </div>`:''}
+
+    <!-- Temp máx/mín por año -->
+    <div class="card">
+      <div class="section-title">Temp. máx. y mín. por año</div>
+      <div class="chart-wrap" style="height:${Math.max(160,yearLabels.length*28)}px"><canvas id="chartTemp"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> Temp. mín.</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> Temp. máx.</div>
+        ${fc?.tMax!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
+      </div>
+    </div>
+
+    <!-- Lluvia por año -->
+    ${hasRain?`<div class="card">
+      <div class="section-title">Lluvia por año (mm)</div>
+      <div class="chart-wrap" style="height:${Math.max(120,rainLabels.length*26)}px"><canvas id="chartRain"></canvas></div>
+      <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤2 mm</div>
         <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> 2–10 mm</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >10 mm</div>
         ${fc?.rain!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
       </div>
-    </div>` : ''}
+    </div>`:''}
 
-    ${wValid.length ? `<div class="card">
+    <!-- Viento por año -->
+    ${windBarsHTML?`<div class="card">
       <div class="section-title">Viento por año</div>
-      ${windBarsHTML}${fcWindHTML}
-      <div class="legend" style="margin-top:8px">
+      ${windBarsHTML}
+      <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤10 kn</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> 10–20 kn</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >20 kn</div>
         ${fc?.wind!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
       </div>
-    </div>` : ''}
+    </div>`:''}
 
     <div class="footer">Generado con <a href="#">Nupcial</a> · datos de <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
   `;
 
-  // Draw temperature chart
-  new Chart(document.getElementById('chartTemp'), {
-    type: 'bar',
-    data: {
-      labels: tempLabels,
-      datasets: [
-        { label:'Temp. mín', data: tMinData, backgroundColor: tMinData.map((_,i)=>i===tMinData.length-1&&fc?.tMax!=null?'rgba(88,86,214,.5)':'rgba(0,122,255,.7)'), borderRadius:4, barPercentage:.5 },
-        { label:'Temp. máx', data: tMaxData, backgroundColor: tMaxData.map((_,i)=>i===tMaxData.length-1&&fc?.tMax!=null?'rgba(88,86,214,.8)':'rgba(255,59,48,.75)'), borderRadius:4, barPercentage:.5 },
+  // Chart: evolución horaria
+  new Chart(document.getElementById('chartEvol'),{
+    type:'line',
+    data:{
+      labels:hours.map(h=>`${pad(h)}h`),
+      datasets:[
+        {label:'Media histórica',data:avgHourlyData,borderColor:'#007aff',backgroundColor:'rgba(0,122,255,.1)',fill:true,tension:.4,pointRadius:0,borderWidth:2,spanGaps:true},
+        ...(hasFcHourly?[{label:'Previsión',data:fcHourlyData,borderColor:'#5856d6',backgroundColor:'transparent',borderDash:[6,4],tension:.4,pointRadius:0,borderWidth:2,spanGaps:true}]:[])
       ]
     },
-    options: {
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.dataset.label}: ${ctx.parsed.x?.toFixed(1)}°C` }}},
-      scales:{
-        x:{ grid:{color:'rgba(0,0,0,.06)'}, ticks:{font:{size:10},color:'#8e8e93',callback:v=>`${v}°C`} },
-        y:{ grid:{display:false}, ticks:{font:{size:11},color:'#636366'} }
-      }
-    }
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}°C`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#8e8e93',maxTicksLimit:8}},y:{grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:9},color:'#8e8e93',callback:v=>`${v}°C`}}}}
   });
 
-  // Draw rainfall chart
-  if (hasRain) {
-    new Chart(document.getElementById('chartRain'), {
+  // Chart: temp máx/mín por año (floating bars + scatter)
+  new Chart(document.getElementById('chartTemp'),{
+    type:'bar',
+    data:{
+      labels:yearLabels,
+      datasets:[
+        {label:'Rango',data:floatData,backgroundColor:bgFloat,borderRadius:6,barPercentage:.5},
+        {label:'Mín',data:ptMin,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#5856d6':'#007aff'),pointRadius:5,pointStyle:'circle'},
+        {label:'Máx',data:ptMax,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#5856d6':'#ff3b30'),pointRadius:5,pointStyle:'circle'},
+      ]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        if(ctx.dataset.label==='Rango')return`Rango: ${ctx.parsed.x[0]?.toFixed(1)}–${ctx.parsed.x[1]?.toFixed(1)}°C`;
+        return`${ctx.dataset.label}: ${ctx.parsed.x?.toFixed(1)}°C`
+      }}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:10},color:'#8e8e93',callback:v=>`${v}°C`}},
+        y:{grid:{display:false},ticks:{font:{size:11},color:'#636366'}}}}
+  });
+
+  // Chart: lluvia por año
+  if(hasRain){
+    new Chart(document.getElementById('chartRain'),{
       type:'bar',
-      data:{ labels:rainLabels, datasets:[{ data:rainData, backgroundColor:rainColors, borderRadius:4, barPercentage:.6 }] },
-      options:{
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${ctx.parsed.x?.toFixed(1)} mm` }}},
-        scales:{
-          x:{ min:0, grid:{color:'rgba(0,0,0,.06)'}, ticks:{font:{size:10},color:'#8e8e93',callback:v=>`${v} mm`} },
-          y:{ grid:{display:false}, ticks:{font:{size:11},color:'#636366'} }
-        }
-      }
+      data:{labels:rainLabels,datasets:[{data:rainData,backgroundColor:rainBg,borderRadius:4,barPercentage:.6}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x?.toFixed(1)} mm`}}},
+        scales:{x:{min:0,grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:10},color:'#8e8e93',callback:v=>`${v} mm`}},
+          y:{grid:{display:false},ticks:{font:{size:11},color:'#636366'}}}}
     });
   }
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────
 
-async function main() {
-  const params = new URLSearchParams(window.location.search);
-  const lat   = parseFloat(params.get('lat'));
-  const lon   = parseFloat(params.get('lon'));
-  const day   = parseInt(params.get('day'));
-  const month = parseInt(params.get('month'));
-  const city  = decodeURIComponent(params.get('city')||'Ubicación');
-  const years = parseInt(params.get('years')||'10');
+async function main(){
+  const p=new URLSearchParams(window.location.search);
+  const lat  =parseFloat(p.get('lat'));
+  const lon  =parseFloat(p.get('lon'));
+  const day  =parseInt(p.get('day'));
+  const month=parseInt(p.get('month'));
+  const city =decodeURIComponent(p.get('city')||'Ubicación');
+  const years=parseInt(p.get('years')||'10');
 
-  if (!lat||!lon||!day||!month) {
-    document.getElementById('app').innerHTML = `<div class="error">Link incompleto. Comparte de nuevo desde la app.</div>`;
-    return;
+  if(!lat||!lon||!day||!month){
+    document.getElementById('app').innerHTML=`<div class="error">Link incompleto. Comparte de nuevo desde la app.</div>`;return;
   }
+  document.title=`${city} · ${day} de ${MONTHS_ES[month-1]} — Nupcial`;
 
-  document.title = `${city} · ${day} de ${MONTHS_ES[month-1]} — Nupcial`;
+  const currentYear=new Date().getFullYear();
+  const yearList=Array.from({length:years},(_,i)=>currentYear-years+i);
 
-  const currentYear = new Date().getFullYear();
-  const yearList = Array.from({length:years},(_,i)=>currentYear-years+i);
-
-  const [entries, fc] = await Promise.all([
+  const[entries,fc]=await Promise.all([
     Promise.all(yearList.map(y=>fetchYear(lat,lon,y,month,day))),
     fetchForecast(lat,lon,month,day),
   ]);
 
-  render(entries, fc, city, month, day);
+  render(entries,fc,city,month,day);
 }
 
 main();
