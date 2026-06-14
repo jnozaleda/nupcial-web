@@ -459,13 +459,23 @@ async function main(){
   document.title=`${city} · ${day} de ${MONTHS_ES[month-1]} — Nupcial`;
 
   const currentYear=new Date().getFullYear();
+  // Fetch the last `years` years (e.g. 2016–2025 for years=10)
   const yearList=Array.from({length:years},(_,i)=>currentYear-years+i);
 
-  const[entries,fc]=await Promise.all([
-    Promise.all(yearList.map(y=>fetchYear(lat,lon,y,month,day))),
-    fetchForecast(lat,lon,month,day),
-  ]);
+  const app=document.getElementById('app');
 
+  // Fetch forecast in parallel while we fetch history sequentially
+  const fcPromise=fetchForecast(lat,lon,month,day);
+
+  // Sequential fetches to avoid rate-limiting on Open-Meteo free tier
+  const entries=[];
+  for(const y of yearList){
+    app.innerHTML=`<div class="loading"><div class="spinner"></div><p>Cargando ${y}… (${entries.length+1}/${yearList.length})</p></div>`;
+    const result=await fetchYear(lat,lon,y,month,day);
+    entries.push(result);
+  }
+
+  const fc=await fcPromise;
   render(entries,fc,city,month,day);
 }
 
