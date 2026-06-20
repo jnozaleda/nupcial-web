@@ -29,8 +29,8 @@
     .kpi-label{font-size:10px;font-weight:500;color:#8e8e93;text-transform:uppercase;letter-spacing:.4px}
     .kpi-value{font-size:19px;font-weight:700;display:flex;align-items:baseline;gap:3px;flex-wrap:wrap}
     .kpi-unit{font-size:11px;color:#636366}
-    .kpi-fc{font-size:11px;font-weight:600;color:#5856d6;margin-left:3px}
-    .kpi-fc-label{font-size:9px;color:#5856d6;opacity:.7}
+    .kpi-fc{font-size:11px;font-weight:600;color:#00C7BE;margin-left:3px}
+    .kpi-fc-label{font-size:9px;color:#00C7BE;opacity:.7}
     .kpi-sub{font-size:10px;color:#aeaeb2;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     /* Section */
@@ -52,7 +52,7 @@
     .legend-dashed{width:14px;height:2px;border-top:2px dashed currentColor;flex-shrink:0}
 
     /* Forecast pill */
-    .fc-pill{background:#f0effe;border-radius:10px;padding:10px 13px;font-size:12px;color:#5856d6;line-height:1.5}
+    .fc-pill{background:#f0effe;border-radius:10px;padding:10px 13px;font-size:12px;color:#00C7BE;line-height:1.5}
     .fc-pill strong{font-weight:600}
 
     /* Axis ticks row */
@@ -64,12 +64,12 @@
 
     /* Loading */
     .loading{text-align:center;padding:60px 20px;color:#8e8e93}
-    .spinner{width:30px;height:30px;border:3px solid #e5e5ea;border-top-color:#5856d6;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+    .spinner{width:30px;height:30px;border:3px solid #e5e5ea;border-top-color:#00C7BE;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
     @keyframes spin{to{transform:rotate(360deg)}}
     .error{text-align:center;padding:40px 20px;color:#c0392b}
 
     .footer{text-align:center;font-size:11px;color:#aeaeb2;margin-top:4px}
-    .footer a{color:#5856d6;text-decoration:none}
+    .footer a{color:#00C7BE;text-decoration:none}
   </style>
 </head>
 <body>
@@ -117,23 +117,23 @@ const RATING_LABEL={excellent:'☀️ Excelente',acceptable:'⛅ Aceptable',tooH
 
 async function fetchYear(lat,lon,year,month,day){
   const d=dateStr(year,month,day);if(!d)return null;
-  const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_mean&hourly=temperature_2m&wind_speed_unit=kn&timezone=auto`;
+  const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_mean&hourly=temperature_2m,wind_speed_10m&wind_speed_unit=kn&timezone=auto`;
   try{
     const r=await fetch(url);if(!r.ok)return null;
     const j=await r.json();
     const dd=j.daily;if(!dd?.time?.length)return null;
-    // parse hourly temps into {hour: temp}
-    const hourlyTemps={};
-    if(j.hourly?.time&&j.hourly?.temperature_2m){
+    const hourlyTemps={};const hourlyWind={};
+    if(j.hourly?.time){
       j.hourly.time.forEach((t,i)=>{
         const h=parseInt(t.split('T')[1]?.slice(0,2)??'99');
-        const v=j.hourly.temperature_2m[i];
-        if(h<24&&v!=null)hourlyTemps[h]=v;
+        if(h>=24)return;
+        const vt=j.hourly.temperature_2m?.[i];if(vt!=null)hourlyTemps[h]=vt;
+        const vw=j.hourly.wind_speed_10m?.[i];if(vw!=null)hourlyWind[h]=vw;
       });
     }
     return{year,tMax:dd.temperature_2m_max?.[0]??null,tMin:dd.temperature_2m_min?.[0]??null,
       rain:dd.precipitation_sum?.[0]??0,wind:dd.wind_speed_10m_max?.[0]??null,
-      gusts:dd.wind_gusts_10m_max?.[0]??null,humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps};
+      gusts:dd.wind_gusts_10m_max?.[0]??null,humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps,hourlyWind};
   }catch{return null}
 }
 
@@ -145,22 +145,23 @@ async function fetchForecast(lat,lon,month,day){
   const diff=Math.round((target-today)/86400000);
   if(diff>15||diff<0)return null;
   const d=`${target.getFullYear()}-${pad(month)}-${pad(day)}`;
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max,wind_gusts_10m_max&hourly=temperature_2m&wind_speed_unit=kn&timezone=auto`;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${d}&end_date=${d}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max,wind_gusts_10m_max&hourly=temperature_2m,wind_speed_10m&wind_speed_unit=kn&timezone=auto`;
   try{
     const r=await fetch(url);if(!r.ok)return null;
     const j=await r.json();const dd=j.daily;if(!dd)return null;
-    const hourlyTemps={};
-    if(j.hourly?.time&&j.hourly?.temperature_2m){
+    const hourlyTemps={};const hourlyWind={};
+    if(j.hourly?.time){
       j.hourly.time.forEach((t,i)=>{
         const h=parseInt(t.split('T')[1]?.slice(0,2)??'99');
-        const v=j.hourly.temperature_2m[i];
-        if(h<24&&v!=null)hourlyTemps[h]=v;
+        if(h>=24)return;
+        const vt=j.hourly.temperature_2m?.[i];if(vt!=null)hourlyTemps[h]=vt;
+        const vw=j.hourly.wind_speed_10m?.[i];if(vw!=null)hourlyWind[h]=vw;
       });
     }
     return{tMax:dd.temperature_2m_max?.[0]??null,tMin:dd.temperature_2m_min?.[0]??null,
       rain:dd.precipitation_sum?.[0]??null,rainProb:dd.precipitation_probability_max?.[0]??null,
       wind:dd.wind_speed_10m_max?.[0]??null,gusts:dd.wind_gusts_10m_max?.[0]??null,
-      humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps,daysOut:diff};
+      humidity:dd.relative_humidity_2m_mean?.[0]??null,hourlyTemps,hourlyWind,daysOut:diff};
   }catch{return null}
 }
 
@@ -191,7 +192,7 @@ function buildHourlyBars(avgTemps,fcTemps){
     const color=tempBarColor(t);
     const label=tempBarLabel(t);
     const fcW=fcTemps&&fcTemps[h]!=null?(maxT>minT?(fcTemps[h]-minT)/(maxT-minT)*0.88+0.05:0.5):null;
-    const fcLine=fcW!=null?`<div style="position:absolute;left:${(fcW*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#5856d6;opacity:.85"></div>`:'';
+    const fcLine=fcW!=null?`<div style="position:absolute;left:${(fcW*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#00C7BE;opacity:.85"></div>`:'';
     return`<div class="hbar-row">
       <div class="hbar-label">${pad(h)}h</div>
       <div class="hbar-track">
@@ -224,12 +225,35 @@ function buildWindBars(valid,fc){
     const norm=(fc.wind-minW)/(maxW-minW)*0.85+0.05;
     const gStr=fc.gusts&&fc.gusts>fc.wind+3?` ↑${Math.round(fc.gusts)}kn`:'';
     return`<div class="hbar-row">
-      <div class="hbar-label" style="color:#5856d6">Prev.</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:#5856d6"><span>${Math.round(fc.wind)} kn${gStr}</span></div></div>
-      <div class="hbar-tag" style="color:#5856d6">Forecast</div>
+      <div class="hbar-label" style="color:#00C7BE">Prev.</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:#00C7BE"><span>${Math.round(fc.wind)} kn${gStr}</span></div></div>
+      <div class="hbar-tag" style="color:#00C7BE">Forecast</div>
     </div>`
   })():'';
   return rows+fcRow;
+}
+
+function buildHourlyWindBars(avgWind,fcWind){
+  const hours=Array.from({length:24},(_,i)=>i);
+  const validVals=hours.map(h=>avgWind[h]).filter(v=>v!=null);
+  if(!validVals.length)return'';
+  const minW=Math.min(...validVals);
+  const maxW=Math.max(...validVals,1);
+  return hours.map(h=>{
+    const w=avgWind[h];if(w==null)return'';
+    const norm=(maxW>minW)?(w-minW)/(maxW-minW)*0.88+0.05:0.5;
+    const color=windColor(w);
+    const fcW=fcWind&&fcWind[h]!=null?(maxW>minW?(fcWind[h]-minW)/(maxW-minW)*0.88+0.05:0.5):null;
+    const fcLine=fcW!=null?`<div style="position:absolute;left:${(fcW*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#00C7BE;opacity:.85"></div>`:'';
+    return`<div class="hbar-row">
+      <div class="hbar-label">${pad(h)}h</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(norm*100).toFixed(1)}%;background:${color}"><span>${w.toFixed(0)} kn</span></div>
+        ${fcLine}
+      </div>
+      <div class="hbar-tag" style="color:${color}">${windLabel(w)}</div>
+    </div>`
+  }).join('');
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
@@ -268,6 +292,14 @@ function render(entries,fc,city,month,day){
     if(vals.length)avgHourly[h]=avg(vals);
   }
   const fcHourly=fc?.hourlyTemps??{};
+
+  // Avg hourly wind
+  const avgHourlyWind={};
+  for(let h=0;h<24;h++){
+    const vals=valid.filter(e=>e.hourlyWind?.[h]!=null).map(e=>e.hourlyWind[h]);
+    if(vals.length)avgHourlyWind[h]=avg(vals);
+  }
+  const fcHourlyWind=fc?.hourlyWind??{};
 
   const descs={
     excellent:`Históricamente seco con buenas temperaturas. Lluvia en solo ${rainyDays} de ${total} años analizados.`,
@@ -309,18 +341,20 @@ function render(entries,fc,city,month,day){
   const ptMin     =valid.map(e=>e.tMin);
   const ptMax     =valid.map(e=>e.tMax);
   const bgFloat   =valid.map(()=>'rgba(200,200,205,.5)');
-  if(fc?.tMax!=null){yearLabels.push('Prev.');floatData.push([fc.tMin??fc.tMax,fc.tMax]);ptMin.push(fc.tMin);ptMax.push(fc.tMax);bgFloat.push('rgba(88,86,214,.25)')}
+  if(fc?.tMax!=null){yearLabels.push('Prev.');floatData.push([fc.tMin??fc.tMax,fc.tMax]);ptMin.push(fc.tMin);ptMax.push(fc.tMax);bgFloat.push('rgba(0,199,190,.25)')}
 
   // Annual rain data
   const rainLabels=[...valid.map(e=>String(e.year))];
   const rainData  =[...valid.map(e=>e.rain??0)];
   const rainBg    =rainData.map(r=>rainColor(r));
-  if(fc?.rain!=null){rainLabels.push('Prev.');rainData.push(fc.rain);rainBg.push('#5856d6')}
+  if(fc?.rain!=null){rainLabels.push('Prev.');rainData.push(fc.rain);rainBg.push('#00C7BE')}
   const hasRain=rainData.some(r=>r>0);
 
   // Wind bars HTML
   const windBarsHTML=buildWindBars(valid,fc);
   const hourlyBarsHTML=buildHourlyBars(avgHourly,hasFcHourly?fcHourly:null);
+  const hasFcHourlyWind=Object.keys(fcHourlyWind).length>0;
+  const hourlyWindBarsHTML=buildHourlyWindBars(avgHourlyWind,hasFcHourlyWind?fcHourlyWind:null);
 
   document.getElementById('app').innerHTML=`
     <div class="card header">
@@ -334,17 +368,17 @@ function render(entries,fc,city,month,day){
 
     ${fc?fcPill:''}
 
-    <!-- Evolución temperatura -->
+    <!-- 1. Evolución temperatura horaria (= SummaryChartView) -->
     <div class="card">
       <div class="section-title">Evolución temperatura horaria (media)</div>
       <div class="chart-wrap" style="height:160px"><canvas id="chartEvol"></canvas></div>
       <div class="legend">
         <div class="legend-item"><div class="legend-line" style="background:#007aff"></div> Media histórica</div>
-        ${hasFcHourly?'<div class="legend-item"><div class="legend-dashed" style="color:#5856d6"></div> Previsión</div>':''}
+        ${hasFcHourly?'<div class="legend-item"><div class="legend-dashed" style="color:#00C7BE"></div> Previsión</div>':''}
       </div>
     </div>
 
-    <!-- Desglose horario temp -->
+    <!-- 2. Temperatura por hora — barras (= HourlyBreakdownView) -->
     ${hourlyBarsHTML?`<div class="card">
       <div class="section-title">Temperatura por hora (media histórica)</div>
       ${hourlyBarsHTML}
@@ -353,34 +387,34 @@ function render(entries,fc,city,month,day){
         <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> Caluroso</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> Muy caluroso</div>
         <div class="legend-item"><div class="legend-dot" style="background:#5ac8fa"></div> Fresco</div>
-        ${hasFcHourly?'<div class="legend-item"><div class="legend-line" style="background:#5856d6;width:10px;height:2px;flex-shrink:0"></div> Previsión</div>':''}
+        ${hasFcHourly?'<div class="legend-item"><div class="legend-line" style="background:#00C7BE;width:10px;height:2px;flex-shrink:0"></div> Previsión</div>':''}
       </div>
     </div>`:''}
 
-    <!-- Temp máx/mín por año -->
+    <!-- 3. Temp máx/mín por año (= AnnualTemperatureView) -->
     <div class="card">
       <div class="section-title">Temp. máx. y mín. por año</div>
       <div class="chart-wrap" style="height:${Math.max(160,yearLabels.length*28)}px"><canvas id="chartTemp"></canvas></div>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> Temp. mín.</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> Temp. máx.</div>
-        ${fc?.tMax!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
+        ${fc?.tMax!=null?'<div class="legend-item"><div class="legend-dot" style="background:#00C7BE"></div> Previsión</div>':''}
       </div>
     </div>
 
-    <!-- Lluvia por año -->
-    ${hasRain?`<div class="card">
-      <div class="section-title">Lluvia por año (mm)</div>
-      <div class="chart-wrap" style="height:${Math.max(120,rainLabels.length*26)}px"><canvas id="chartRain"></canvas></div>
+    <!-- 4. Viento por hora — barras (= HourlyWindBreakdownView) -->
+    ${hourlyWindBarsHTML?`<div class="card">
+      <div class="section-title">Viento por hora (media histórica)</div>
+      ${hourlyWindBarsHTML}
       <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤2 mm</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> 2–10 mm</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >10 mm</div>
-        ${fc?.rain!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
+        <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤10 kn</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> 10–20 kn</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >20 kn</div>
+        ${hasFcHourlyWind?'<div class="legend-item"><div class="legend-line" style="background:#00C7BE;width:10px;height:2px;flex-shrink:0"></div> Previsión</div>':''}
       </div>
     </div>`:''}
 
-    <!-- Viento por año -->
+    <!-- 5. Viento por año (= WindChartView) -->
     ${windBarsHTML?`<div class="card">
       <div class="section-title">Viento por año</div>
       ${windBarsHTML}
@@ -388,7 +422,19 @@ function render(entries,fc,city,month,day){
         <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤10 kn</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> 10–20 kn</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >20 kn</div>
-        ${fc?.wind!=null?'<div class="legend-item"><div class="legend-dot" style="background:#5856d6"></div> Previsión</div>':''}
+        ${fc?.wind!=null?'<div class="legend-item"><div class="legend-dot" style="background:#00C7BE"></div> Previsión</div>':''}
+      </div>
+    </div>`:''}
+
+    <!-- 6. Lluvia por año (= AnnualRainfallView) -->
+    ${hasRain?`<div class="card">
+      <div class="section-title">Lluvia por año (mm)</div>
+      <div class="chart-wrap" style="height:${Math.max(120,rainLabels.length*26)}px"><canvas id="chartRain"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#34c759"></div> ≤2 mm</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div> 2–10 mm</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div> >10 mm</div>
+        ${fc?.rain!=null?'<div class="legend-item"><div class="legend-dot" style="background:#00C7BE"></div> Previsión</div>':''}
       </div>
     </div>`:''}
 
@@ -402,7 +448,7 @@ function render(entries,fc,city,month,day){
       labels:hours.map(h=>`${pad(h)}h`),
       datasets:[
         {label:'Media histórica',data:avgHourlyData,borderColor:'#007aff',backgroundColor:'rgba(0,122,255,.1)',fill:true,tension:.4,pointRadius:0,borderWidth:2,spanGaps:true},
-        ...(hasFcHourly?[{label:'Previsión',data:fcHourlyData,borderColor:'#5856d6',backgroundColor:'transparent',borderDash:[6,4],tension:.4,pointRadius:0,borderWidth:2,spanGaps:true}]:[])
+        ...(hasFcHourly?[{label:'Previsión',data:fcHourlyData,borderColor:'#00C7BE',backgroundColor:'transparent',borderDash:[6,4],tension:.4,pointRadius:0,borderWidth:2,spanGaps:true}]:[])
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}°C`}}},
@@ -416,8 +462,8 @@ function render(entries,fc,city,month,day){
       labels:yearLabels,
       datasets:[
         {label:'Rango',data:floatData,backgroundColor:bgFloat,borderRadius:6,barPercentage:.5},
-        {label:'Mín',data:ptMin,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#5856d6':'#007aff'),pointRadius:5,pointStyle:'circle'},
-        {label:'Máx',data:ptMax,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#5856d6':'#ff3b30'),pointRadius:5,pointStyle:'circle'},
+        {label:'Mín',data:ptMin,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#00C7BE':'#007aff'),pointRadius:5,pointStyle:'circle'},
+        {label:'Máx',data:ptMax,type:'scatter',backgroundColor:yearLabels.map((_,i)=>i===yearLabels.length-1&&fc?.tMax!=null?'#00C7BE':'#ff3b30'),pointRadius:5,pointStyle:'circle'},
       ]
     },
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
